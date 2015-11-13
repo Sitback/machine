@@ -4,12 +4,12 @@ import (
 	"github.com/docker/machine/libmachine/log"
 )
 
-func cmdStatus(c CommandLine) error {
+func cmdStatus(c MachineCLIClient) error {
 	if len(c.Args()) != 1 {
 		return ErrExpectedOneMachine
 	}
 
-	host, err := getFirstArgHost(c)
+	host, err := c.Load(c.Args().First())
 	if err != nil {
 		return err
 	}

@@ -26,7 +26,7 @@ Be advised that this will trigger a Docker daemon restart which will stop runnin
 `, e.hostURL, e.wrappedErr)
 }
 
-func cmdConfig(c CommandLine) error {
+func cmdConfig(c MachineCLIClient) error {
 	// Ensure that log messages always go to stderr when this command is
 	// being run (it is intended to be run in a subshell)
 	log.SetOutWriter(os.Stderr)
@@ -35,7 +35,7 @@ func cmdConfig(c CommandLine) error {
 		return ErrExpectedOneMachine
 	}
 
-	host, err := getFirstArgHost(c)
+	host, err := c.Load(c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func cmdConfig(c CommandLine) error {
 	return nil
 }
 
-func runConnectionBoilerplate(h *host.Host, c CommandLine) (string, *auth.Options, error) {
+func runConnectionBoilerplate(h *host.Host, c MachineCLIClient) (string, *auth.Options, error) {
 	hostState, err := h.Driver.GetState()
 	if err != nil {
 		// TODO: This is a common operation and should have a commonly

@@ -1,5 +1,5 @@
 package commands
 
-func cmdUpgrade(c CommandLine) error {
-	return runActionWithContext("upgrade", c)
+func cmdUpgrade(c MachineCLIClient) error {
+	return runActionWithMachineClient("upgrade", c)
 }

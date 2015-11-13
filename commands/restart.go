@@ -4,8 +4,8 @@ import (
 	"github.com/docker/machine/libmachine/log"
 )
 
-func cmdRestart(c CommandLine) error {
-	if err := runActionWithContext("restart", c); err != nil {
+func cmdRestart(c MachineCLIClient) error {
+	if err := runActionWithMachineClient("restart", c); err != nil {
 		return err
 	}
 

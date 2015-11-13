@@ -15,7 +15,6 @@ import (
 	"github.com/docker/machine/cli"
 	"github.com/docker/machine/commands/mcndirs"
 	"github.com/docker/machine/drivers/errdriver"
-	"github.com/docker/machine/libmachine"
 	"github.com/docker/machine/libmachine/auth"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/drivers/rpc"
@@ -24,7 +23,6 @@ import (
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcnerror"
 	"github.com/docker/machine/libmachine/mcnflag"
-	"github.com/docker/machine/libmachine/persist"
 	"github.com/docker/machine/libmachine/swarm"
 )
 
@@ -118,27 +116,18 @@ var (
 	}
 )
 
-func cmdCreateInner(c CommandLine) error {
+func cmdCreateInner(c MachineCLIClient) error {
 	if len(c.Args()) > 1 {
 		return fmt.Errorf("Invalid command line. Found extra arguments %v", c.Args()[1:])
 	}
 
 	name := c.Args().First()
-	driverName := c.String("driver")
-	certInfo := getCertPathInfoFromContext(c)
-
-	storePath := c.GlobalString("storage-path")
-
-	store := &persist.Filestore{
-		Path:             storePath,
-		CaCertPath:       certInfo.CaCertPath,
-		CaPrivateKeyPath: certInfo.CaPrivateKeyPath,
-	}
-
 	if name == "" {
 		c.ShowHelp()
 		return errNoMachineName
 	}
+
+	driverName := c.String("driver")
 
 	validName := host.ValidateHostName(name)
 	if !validName {
@@ -158,15 +147,17 @@ func cmdCreateInner(c CommandLine) error {
 		return fmt.Errorf("Error attempting to marshal bare driver data: %s", err)
 	}
 
-	driver, err := newPluginDriver(driverName, bareDriverData)
+	driver, err := c.NewPluginDriver(driverName, bareDriverData)
 	if err != nil {
 		return fmt.Errorf("Error loading driver %q: %s", driverName, err)
 	}
 
-	h, err := store.NewHost(driver)
+	h, err := c.NewHost(driver)
 	if err != nil {
 		return fmt.Errorf("Error getting new host: %s", err)
 	}
+
+	certInfo := getCertPathInfoFromCommandLine(c)
 
 	h.HostOptions = &host.Options{
 		AuthOptions: &auth.Options{
@@ -201,7 +192,7 @@ func cmdCreateInner(c CommandLine) error {
 		},
 	}
 
-	exists, err := store.Exists(h.Name)
+	exists, err := c.Exists(h.Name)
 	if err != nil {
 		return fmt.Errorf("Error checking if host exists: %s", err)
 	}
@@ -221,11 +212,11 @@ func cmdCreateInner(c CommandLine) error {
 		return fmt.Errorf("Error setting machine configuration from flags provided: %s", err)
 	}
 
-	if err := libmachine.Create(store, h); err != nil {
+	if err := c.Create(h); err != nil {
 		return fmt.Errorf("Error creating machine: %s", err)
 	}
 
-	if err := saveHost(store, h); err != nil {
+	if err := c.Save(h); err != nil {
 		return fmt.Errorf("Error attempting to save store: %s", err)
 	}
 
@@ -270,7 +261,7 @@ func flagHackLookup(flagName string) string {
 	return ""
 }
 
-func cmdCreateOuter(c CommandLine) error {
+func cmdCreateOuter(c MachineCLIClient) error {
 	const (
 		flagLookupMachineName = "flag-lookup"
 	)
@@ -290,7 +281,7 @@ func cmdCreateOuter(c CommandLine) error {
 		return fmt.Errorf("Error attempting to marshal bare driver data: %s", err)
 	}
 
-	driver, err := newPluginDriver(driverName, bareDriverData)
+	driver, err := c.NewPluginDriver(driverName, bareDriverData)
 	if err != nil {
 		return fmt.Errorf("Error loading driver %q: %s", driverName, err)
 	}
@@ -333,7 +324,7 @@ func cmdCreateOuter(c CommandLine) error {
 	return c.Application().Run(os.Args)
 }
 
-func getDriverOpts(c CommandLine, mcnflags []mcnflag.Flag) drivers.DriverOptions {
+func getDriverOpts(c MachineCLIClient, mcnflags []mcnflag.Flag) drivers.DriverOptions {
 	// TODO: This function is pretty damn YOLO and would benefit from some
 	// sanity checking around types and assertions.
 	//

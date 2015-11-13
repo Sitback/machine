@@ -18,13 +18,13 @@ var funcMap = template.FuncMap{
 	},
 }
 
-func cmdInspect(c CommandLine) error {
+func cmdInspect(c MachineCLIClient) error {
 	if len(c.Args()) == 0 {
 		c.ShowHelp()
 		return ErrExpectedOneMachine
 	}
 
-	host, err := getFirstArgHost(c)
+	host, err := c.Load(c.Args().First())
 	if err != nil {
 		return err
 	}
