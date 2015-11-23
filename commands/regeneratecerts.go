@@ -4,7 +4,7 @@ import (
 	"github.com/docker/machine/libmachine/log"
 )
 
-func cmdRegenerateCerts(c CommandLine) error {
+func cmdRegenerateCerts(c MachineCLIClient) error {
 	if !c.Bool("force") {
 		ok, err := confirmInput("Regenerate TLS machine certs?  Warning: this is irreversible.")
 		if err != nil {
@@ -18,5 +18,5 @@ func cmdRegenerateCerts(c CommandLine) error {
 
 	log.Infof("Regenerating TLS certificates")
 
-	return runActionWithContext("configureAuth", c)
+	return runActionWithMachineClient("configureAuth", c)
 }

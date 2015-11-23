@@ -1,5 +1,5 @@
 package commands
 
-func cmdStop(c CommandLine) error {
-	return runActionWithContext("stop", c)
+func cmdStop(c MachineCLIClient) error {
+	return runActionWithMachineClient("stop", c)
 }

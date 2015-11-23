@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-func cmdURL(c CommandLine) error {
+func cmdURL(c MachineCLIClient) error {
 	if len(c.Args()) != 1 {
 		return ErrExpectedOneMachine
 	}
 
-	host, err := getFirstArgHost(c)
+	host, err := c.Load(c.Args().First())
 	if err != nil {
 		return err
 	}

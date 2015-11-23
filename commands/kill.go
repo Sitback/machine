@@ -1,5 +1,5 @@
 package commands
 
-func cmdKill(c CommandLine) error {
-	return runActionWithContext("kill", c)
+func cmdKill(c MachineCLIClient) error {
+	return runActionWithMachineClient("kill", c)
 }

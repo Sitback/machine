@@ -1,5 +1,5 @@
 package commands
 
-func cmdIP(c CommandLine) error {
-	return runActionWithContext("ip", c)
+func cmdIP(c MachineCLIClient) error {
+	return runActionWithMachineClient("ip", c)
 }

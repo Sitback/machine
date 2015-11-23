@@ -35,7 +35,7 @@ type ShellConfig struct {
 	NoProxyValue    string
 }
 
-func cmdEnv(c CommandLine) error {
+func cmdEnv(c MachineCLIClient) error {
 	// Ensure that log messages always go to stderr when this command is
 	// being run (it is intended to be run in a subshell)
 	log.SetOutWriter(os.Stderr)
@@ -46,12 +46,12 @@ func cmdEnv(c CommandLine) error {
 	return set(c)
 }
 
-func set(c CommandLine) error {
+func set(c MachineCLIClient) error {
 	if len(c.Args()) != 1 {
 		return errImproperEnvArgs
 	}
 
-	host, err := getFirstArgHost(c)
+	host, err := c.Load(c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func set(c CommandLine) error {
 	return executeTemplateStdout(shellCfg)
 }
 
-func unset(c CommandLine) error {
+func unset(c MachineCLIClient) error {
 	if len(c.Args()) != 0 {
 		return errImproperUnsetEnvArgs
 	}
@@ -168,7 +168,7 @@ func executeTemplateStdout(shellCfg *ShellConfig) error {
 	return tmpl.Execute(os.Stdout, shellCfg)
 }
 
-func getShell(c CommandLine) (string, error) {
+func getShell(c MachineCLIClient) (string, error) {
 	userShell := c.String("shell")
 	if userShell != "" {
 		return userShell, nil
